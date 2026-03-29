@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hospital Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --p: #007bff; --d: #2c3e50; --bg: #f5f7fa; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; color: #333; }
+        .sidebar { width: 250px; background: #ffffff; box-shadow: 2px 0 15px rgba(0,0,0,0.05); color: #2c3e50; min-height: 100vh; padding-top: 20px; border-right: 1px solid #eef2f5; }
+        .sidebar h2 { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #eef2f5; padding-bottom: 10px; font-size: 18px; color: #007bff; }
+        .menu-item { padding: 15px 20px; cursor: pointer; transition: 0.3s; display: block; text-decoration: none; color: #555; }
+        .menu-item:hover, .menu-item.active { background: #eef2f5; color: #007bff; font-weight: bold; border-right: 4px solid #007bff; }
+        .menu-item i { width: 25px; color: #007bff; }
+        .main { flex: 1; padding: 40px; }
+        .back-btn { margin-bottom: 30px; display: inline-block; text-decoration: none; color: #007bff; font-weight: bold; border: 1px solid #007bff; padding: 8px 15px; border-radius: 8px; transition: 0.3s; }
+        .back-btn:hover { background: #007bff; color: #fff; box-shadow: 0 4px 15px rgba(0,123,255,0.2); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card { background: #ffffff; border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid #eef2f5; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #eef2f5; padding: 12px; text-align: left; color: #333; }
+        th { background: #f8f9fa; color: #2c3e50; }
+        button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 8px; color: white; transition: 0.3s; font-family: 'Montserrat'; font-weight: 600; }
+        .btn-add { background: linear-gradient(90deg, #20c997, #28a745); margin-bottom: 15px; box-shadow: 0 4px 10px rgba(40,167,69,0.2); }
+        .btn-add:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(40,167,69,0.4); }
+        .btn-del { background: linear-gradient(90deg, #ff4757, #c0392b); box-shadow: 0 4px 10px rgba(255,71,87,0.2); }
+        .btn-edit { background: #f39c12; }
+        
+        .form-row { margin-bottom: 15px; }
+        .form-row input, .form-row select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-family: 'Montserrat'; background: #fff; color: #333; }
+        #apiStatus { padding: 15px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 8px; margin-bottom: 20px; display: none;}
+        
+        /* Auth Overlay Styles */
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; }
+        .login-box { background: rgba(255,255,255,0.9); padding: 50px; border-radius: 15px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.8); width: 100%; max-width: 400px; }
+        .login-box h2 { color: #2c3e50; margin-bottom: 30px; font-weight: 700; font-size: 24px;}
+        .login-box i { font-size: 48px; color: #007bff; margin-bottom: 20px; display: block; }
+        .login-box input { width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #333; font-size: 16px; font-family: 'Montserrat'; outline: none;}
+        .login-box input::placeholder { color: #aaa; }
+        .login-box button { width: 100%; padding: 15px; border-radius: 8px; border: none; background: #007bff; color: white; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s;}
+        .login-box button:hover { background: #0056b3; transform: translateY(-2px);}
+        #loginErr { color: #e74c3c; margin-top: 15px; font-size: 14px; display: none; }
+        #adminContent { display: none; width: 100%; } /* Hidden initially */
+    </style>
+</head>
+<body>
+
+<!-- LOGIN OVERLAY -->
+<div id="loginOverlay">
+    <div class="login-box">
+        <i class="fas fa-user-shield"></i>
+        <h2>Admin Authentication</h2>
+        <input type="text" id="authUsername" placeholder="Username (Ex: hotelAdmin)">
+        <input type="password" id="authPassword" placeholder="Password">
+        <button onclick="checkAuth()">Verify Access</button>
+        <div id="loginErr">Incorrect username or password!</div>
+        <a href="index.html" style="color:#007bff; text-decoration:none; display:inline-block; margin-top:30px; font-size:14px;"><i class="fas fa-arrow-left"></i> Return to Site</a>
+    </div>
+</div>
+
+<div id="adminContent">
+  <div class="sidebar">
+      <h2><i class="fas fa-hospital"></i> Hospital Admin</h2>
+      <div class="menu-item active" onclick="switchTab('patients', this)"><i class="fas fa-users"></i> Patient Database</div>
+      <div class="menu-item" onclick="switchTab('doctors', this)"><i class="fas fa-user-md"></i> Doctor Database</div>
+      <div class="menu-item" onclick="switchTab('appointments', this)"><i class="fas fa-calendar"></i> Appointments</div>
+      <div class="menu-item" onclick="switchTab('bills', this)"><i class="fas fa-file-invoice-dollar"></i> Financial Ledgers</div>
+  </div>
+
+  <div class="main">
+    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Live Website</a>
+    <div id="apiStatus"><i class="fas fa-check-circle"></i> Connected to API Gateway</div>
+
+    <!-- PATIENTS TAB -->
+    <div id="patients" class="tab-content active card">
+        <h2>Patient Records Database</h2>
+        <p>Live data fetched from <strong>Patient Service</strong> via API Gateway.</p>
+        <button class="btn-add" onclick="testData('patients')"><i class="fas fa-plus"></i> Load Data</button>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead><tr><th>ID</th><th>Name</th><th>Age</th><th>Blood Group</th><th>Contact</th><th>Action</th></tr></thead>
+                <tbody id="tb-patients"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- DOCTORS TAB -->
+    <div id="doctors" class="tab-content card">
+        <h2>Doctor Records Database</h2>
+        <p>Live data fetched from <strong>Doctor Service</strong> via API Gateway.</p>
+        
+        <div style="background: #f8f9fa; border: 1px solid #eef2f5; padding:20px; border-radius:12px; margin-bottom:20px;">
+            <h3 style="margin-top:0; color:#007bff;">Hire New Doctor (POST Request)</h3>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="dName" placeholder="Dr. Name" style="padding:12px; width:100%; border-radius:8px; border:1px solid #ccc; background:#fff; color:#333;">
+                <input type="text" id="dSpec" placeholder="Specialization" style="padding:12px; width:100%; border-radius:8px; border:1px solid #ccc; background:#fff; color:#333;">
+                <input type="number" id="dExp" placeholder="Exp (Years)" style="padding:12px; width:100%; border-radius:8px; border:1px solid #ccc; background:#fff; color:#333;">
+                <input type="number" id="dFee" placeholder="Fee (LKR)" style="padding:12px; width:100%; border-radius:8px; border:1px solid #ccc; background:#fff; color:#333;">
+                <button class="btn-add" style="margin:0; min-width:120px;" onclick="createDoctor()">Add Doctor</button>
+            </div>
+        </div>
+
+        <button class="btn-add" onclick="testData('doctors')"><i class="fas fa-sync"></i> Refresh Data</button>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead><tr><th>ID</th><th>Dr. Name</th><th>Specialization</th><th>Fee (LKR)</th><th>Action</th></tr></thead>
+                <tbody id="tb-doctors"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- APPOINTMENTS TAB -->
+    <div id="appointments" class="tab-content card">
+        <h2>Appointment Schedules</h2>
+        <p>Live data fetched from <strong>Appointment Service</strong> via API Gateway.</p>
+        <button class="btn-add" onclick="testData('appointments')"><i class="fas fa-sync"></i> Refresh Data</button>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead><tr><th>ID</th><th>Patient Name</th><th>Doctor Name</th><th>Date</th><th>Slot</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody id="tb-appointments"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- BILLING TAB -->
+    <div id="bills" class="tab-content card">
+        <h2>Financial Ledgers</h2>
+        <p>Live data fetched from <strong>Billing Service</strong> via API Gateway.</p>
+        <button class="btn-add" onclick="testData('bills')"><i class="fas fa-sync"></i> Refresh Data</button>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead><tr><th>Invoice ID</th><th>Patient Name</th><th>Description</th><th>Amount (LKR)</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody id="tb-bills"></tbody>
+            </table>
+        </div>
+    </div>
+
+  </div> <!-- End Main -->
+</div> <!-- End Admin Content -->
+
+<script src="admin.js"></script>
+</body>
+</html>

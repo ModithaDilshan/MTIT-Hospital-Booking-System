@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grand City Hospital</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&family=Montserrat:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo"><i class="fas fa-heartbeat"></i> Grand City Hospital</div>
+        <ul class="nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#services">Departments</a></li>
+            <li><a href="#appointments">Book Appointment</a></li>
+            <li><button class="btn-outline" onclick="openModal('registerModal')">Register (Patient)</button></li>
+            <li><a href="admin.html" class="admin-btn"><i class="fas fa-shield-alt"></i> Admin Dashboard</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <header id="home" class="hero" style="background-image: linear-gradient(rgba(0, 31, 63, 0.7), rgba(0, 31, 63, 0.4)), url('images/hosp_hero.png');">
+        <div class="hero-content">
+            <h1>Advanced Healthcare, Compassionate Care.</h1>
+            <p>Experience world-class medical services with our internationally certified doctors and state-of-the-art facilities.</p>
+            <div class="hero-buttons">
+                <a href="#appointments" class="btn-primary">Schedule a Visit</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Departments Showcase -->
+    <section id="services" class="services-section">
+        <div class="section-title">
+            <h2>Our Departments</h2>
+            <div class="divider"></div>
+        </div>
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-img" style="background-image: url('images/hosp_1.png');"></div>
+                <div class="service-info">
+                    <h3>Consultations</h3>
+                    <p>Expert diagnostic and primary care from our top-tier physicians.</p>
+                </div>
+            </div>
+            <div class="service-card">
+                <div class="service-img" style="background-image: url('images/hosp_2.png');"></div>
+                <div class="service-info">
+                    <h3>Surgical Theaters</h3>
+                    <p>High-tech robotics and advanced sterile environments for critical procedures.</p>
+                </div>
+            </div>
+            <div class="service-card">
+                <div class="service-img" style="background-image: url('images/hosp_3.png');"></div>
+                <div class="service-info">
+                    <h3>Administration</h3>
+                    <p>Seamless admission, insurance processing, and transparent billing.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Doctors Showcase Section (Dynamically Loaded) -->
+    <section class="doctors-section" id="doctors">
+        <div class="section-title">
+            <h2>Our Top Specialists</h2>
+            <div class="divider"></div>
+        </div>
+        <!-- This grid will be populated live directly from the MongoDB via API Gateway -->
+        <div class="doctors-grid" id="doctorsGrid">
+            <p style="text-align:center; width:100%;">Loading specialist data...</p>
+        </div>
+    </section>
+
+    <!-- Patient Action Area (Book & Pay) -->
+    <section id="appointments" class="booking-section">
+        <div class="booking-container">
+            <div class="booking-form-wrapper">
+                <h2><i class="fas fa-calendar-check"></i> Book an Appointment</h2>
+                <p>Already a registered patient? Book your slot securely.</p>
+                <form id="appointmentForm" onsubmit="submitAppointment(event)">
+                    <div class="input-group">
+                        <i class="fas fa-id-badge"></i>
+                        <input type="text" id="aptPatientId" placeholder="Your Registered Patient ID (Ex: 64a...)" required>
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="aptPatientName" placeholder="Your Full Name" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-stethoscope"></i>
+                        <select id="aptDoctorSelect" required>
+                            <option value="">-- Select Available Doctor --</option>
+                        </select>
+                    </div>
+
+                    <div class="date-time-row">
+                        <div class="input-group" style="flex:1;">
+                            <i class="fas fa-calendar-alt"></i>
+                            <input type="date" id="aptDate" required>
+                        </div>
+                        <div class="input-group" style="flex:1;">
+                            <i class="fas fa-clock"></i>
+                            <select id="aptTime" required>
+                                <option>09:00 AM</option>
+                                <option>11:00 AM</option>
+                                <option>02:00 PM</option>
+                                <option>04:30 PM</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary full-width">Confirm Appointment</button>
+                    <div id="aptRes" class="response-msg" style="display:none; margin-top:15px;"></div>
+                </form>
+            </div>
+            
+            <div class="billing-form-wrapper">
+                <h2><i class="fas fa-file-invoice-dollar"></i> Quick Billing / Payment</h2>
+                <p>Pay your hospital or consultation bills instantly.</p>
+                <form id="billingForm" onsubmit="submitBill(event)">
+                    <div class="input-group">
+                        <i class="fas fa-id-badge"></i>
+                        <input type="text" id="billPatientId" placeholder="Your Patient ID" required>
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-user-circle"></i>
+                        <input type="text" id="billPatientName" placeholder="Your Full Name" required>
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-comment-medical"></i>
+                        <input type="text" id="billReason" placeholder="Description (Ex: Dr. Smith Consultation)" required>
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <input type="number" id="billAmount" placeholder="Amount (LKR)" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-credit-card"></i>
+                        <select id="billMethod" required>
+                            <option value="Card">Credit/Debit Card</option>
+                            <option value="Cash">Cash at Counter</option>
+                            <option value="Insurance">Insurance Claim</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn-success full-width">Process Payment</button>
+                    <div id="billRes" class="response-msg" style="display:none; margin-top:15px;"></div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- System Health -->
+    <div class="health-bar">
+        <span>System Status:</span>
+        <span class="status-indicator" id="s-pat">Patients <span class="dot"></span></span>
+        <span class="status-indicator" id="s-doc">Doctors <span class="dot"></span></span>
+        <span class="status-indicator" id="s-apt">Appointments <span class="dot"></span></span>
+        <span class="status-indicator" id="s-bil">Billing <span class="dot"></span></span>
+    </div>
+
+    <!-- Modals -->
+    <!-- Registration Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('registerModal')">&times;</span>
+            <h2 style="color:var(--primary); font-family:'Montserrat';"><i class="fas fa-user-plus"></i> New Patient Registration</h2>
+            <form id="registerForm" onsubmit="registerPatient(event)">
+                <input type="text" id="regName" placeholder="Full Name" required>
+                <div style="display:flex; gap:10px; margin-bottom:15px;">
+                    <input type="number" id="regAge" placeholder="Age" required style="margin-bottom:0;">
+                    <select id="regGender" required style="margin-bottom:0; width:100%; padding:10px; border-radius:4px; border:1px solid #ccc;">
+                        <option value="">Gender</option><option>Male</option><option>Female</option><option>Other</option>
+                    </select>
+                </div>
+                <div style="display:flex; gap:10px; margin-bottom:15px;">
+                    <input type="text" id="regContact" placeholder="Phone Number" required style="margin-bottom:0;">
+                    <select id="regBlood" required style="margin-bottom:0; width:100%; padding:10px; border-radius:4px; border:1px solid #ccc;">
+                        <option value="">Blood Group</option><option>A+</option><option>B+</option><option>O+</option><option>AB+</option><option>O-</option>
+                    </select>
+                </div>
+                <textarea id="regAddress" placeholder="Home Address" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; margin-bottom:15px; font-family:inherit;"></textarea>
+                <button type="submit" class="btn-primary full-width" style="padding:15px; font-size:16px;">Register Profile</button>
+            </form>
+            <div id="regResult" class="response-msg" style="display:none; margin-top:15px;"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
